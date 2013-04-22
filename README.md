@@ -1,10 +1,11 @@
-Bash script to change desktop Wallpaper.
-========================================
+Bash script to change desktop wallpaper
+=======================================
 
 Installation
 ------------
 
 To install as a Cron job that runs every hour:
+
     crontab -e
     * */1 * * * /<path>/wallpaper.sh
 
