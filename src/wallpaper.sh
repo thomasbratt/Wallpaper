@@ -1,31 +1,36 @@
 #!/bin/bash
 
-# -----------------------------------------------------------------------------
-# Bash script to change desktop Wallpaper.
+# Wallpaper changer script for Ubuntu 14.04.
 #
 # To install as a Cron job that runs every hour:
-#   crontab -e
-#   * */1 * * * /<path>/wallpaper.sh
-#
-# Changes are logged to the /tmp folder.
-# -----------------------------------------------------------------------------
+# crontab -e
+# * */1 * * * <path to this script file>
 
-# Options
-FILES='/<path>/Pictures/wallpaper'
-LOG='/tmp/wallpaper.log'
+FILES=/home/thomas/Pictures/wallpaper
+LOG=/tmp/wallpaper.log
 
-# Change the wallpaper to a random file in the specified folder.o
+# Change the wallpaper to a random .jpg file in the specified folder.
 # Exclude the previously selected file.
-p=$( gsettings get org.gnome.desktop.background picture-uri ) 
-p1=$( echo $p | sed s^file:///^^g | sed s^\'^^g)
-n=$( find $FILES -iname '*.jpg' -type f | grep -v $p1 | shuf -n1 )
-r=$( DISPLAY=:0 GSETTINGS_BACKEND=dconf gsettings set org.gnome.desktop.background picture-uri "file:///$n" )
+previous=$(                                                 \
+    gsettings get org.gnome.desktop.background picture-uri  \
+    | sed 's|file:///||g'                                     \
+    | sed 's|\x27||g' )
+next=$(
+    find $FILES -iname '*.jpg' -type f                      \
+    | grep -v "$previous"                                   \
+    | shuf -n1 )
+result=$(                                                   \
+    DISPLAY=:0                                              \
+    GSETTINGS_BACKEND=dconf                                 \
+    gsettings set org.gnome.desktop.background picture-uri  \
+    "file:///$next" )
 
 # Logging.
-echo -n "$(date -u +'%F %T')Z" >> $LOG
-echo -n " $(whoami)">> $LOG
-echo -n " $?" >> $LOG
-echo -n " $p1" >> $LOG
-echo -n " $n" >> $LOG
-echo -n " $r" >> $LOG
-echo "" >> $LOG
+printf '%s %s %s %s %s\n'                                   \
+    "$(date -u +'%F %T')Z"                                  \
+    "$(whoami)"                                             \
+    "$previous"                                             \
+    "$next"                                                 \
+    "$result"                                               \
+    >> "$LOG"
+
